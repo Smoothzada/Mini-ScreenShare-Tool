@@ -445,7 +445,7 @@ Set-Location $InitialPath
 
     try {
         Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-        Invoke-Expression (Invoke-RestMethod -Uri "https://files.catbox.moe/wrdpqk.ps1")
+        Invoke-Expression (Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Smoothzada/Minecraft-Alt-Detector/refs/heads/main/AltDetector.ps1")
         Write-Host "Script executado com sucesso!" -ForegroundColor Green
     } catch {
         Write-Host "Erro ao executar o script: $_" -ForegroundColor Red
