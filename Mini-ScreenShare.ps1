@@ -1,9 +1,9 @@
 $ErrorActionPreference = "SilentlyContinue"
 clear-host
 function MainMenu {
-cls
-Logo                                                          
-Write-Host @"
+    Clear-Host
+    Logo                                                          
+    Write-Host @"
         [1] Prefetch Tool's            [6] Spokwn Tool
         [2] Pcasvc-Execution           [7] SystemInformer
         [3] Everything                 [8] BAM Tool's
@@ -11,13 +11,13 @@ Write-Host @"
         [5] Bstrings                   [0] MACETA
 
 "@
-Write-Host -ForegroundColor Yellow "        [Next] Next Page"
-Write-Host -ForegroundColor Yellow "        [Exit] Exit and close Script Tool"
+    Write-Host -ForegroundColor Yellow "        [Next] Next Page"
+    Write-Host -ForegroundColor Yellow "        [Exit] Exit and close Script Tool"
 }
 function Menu2 {
-cls
-Logo
-Write-Host @"
+    Clear-Host
+    Logo
+    Write-Host @"
         [1] USBDeview                  [6] EDDv310
         [2] Alt Detector               [7] AppCompatCacheParser
         [3] Scheduler parser           [8] Velociraptor
@@ -25,12 +25,12 @@ Write-Host @"
         [5] InjGen                     [0] Service-Check
 
 "@
-Write-Host -ForegroundColor Yellow "        [Back] Back for Main Page"
-Write-Host -ForegroundColor Yellow "        [Exit] Exit and close Script Tool"
+    Write-Host -ForegroundColor Yellow "        [Back] Back for Main Page"
+    Write-Host -ForegroundColor Yellow "        [Exit] Exit and close Script Tool"
 }
 
 function Logo {
-Write-Host @"
+    Write-Host @"
 
     ╔══════════════════════════════════════════════════════════════════════════════════╗
     ║ ███████╗███╗   ███╗ ██████╗  ██████╗ ████████╗██╗  ██╗    ███████╗███████╗       ║
@@ -51,41 +51,33 @@ Write-Host @"
     Write-Host -ForegroundColor Blue "     by Smooth | Discord: smoothzada"
     Write-Host ""
 }
-function Test-Admin {;$currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent());$currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);}
+function Test-Admin { ; $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent()); $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator); }
 if (!(Test-Admin)) {
     Write-Warning "Execute o script como Administrador"
     Start-Sleep 5
     Exit
 }
-function PathVerify {
-    param (
-        [string]$FolderPath
-    )
-    
-    if (Test-Path $FolderPath -PathType Container) {
-        return $true
-    } else {
-        Write-Host "Pasta não encontrada" -ForegroundColor Red
-        Start-Sleep -Seconds 1
-        cls
-        return $false
-    }
-}
-    do {
-        Logo
-        $OutfilePath = Read-Host "Digite o caminho completo da pasta"
-        $foundPath = PathVerify -FolderPath $OutfilePath
-    } while (-not $foundPath)
+# Caminho fixo
+$OutfilePath = "C:\SS1"
 
-cls
+# Verifica se a pasta existe, se não, cria
+if (!(Test-Path -Path $OutfilePath)) {
+    New-Item -ItemType Directory -Path $OutfilePath | Out-Null
+    Write-Host "Pasta C:\SS1 criada com sucesso!" -ForegroundColor Green
+}
+else {
+    Write-Host "Usando a pasta existente: C:\SS1" -ForegroundColor Yellow
+}
+
+Clear-Host
 MainMenu
 
 while ($true) {
-    cd $OutfilePath
+    Set-Location $OutfilePath
     $Choser = Read-Host "Escolha"
 
     if ($Choser -eq 1) {
-        cls
+        Clear-Host
         Logo 
         Write-Host "Escolha uma Opção para Prefetch:"
         Write-Host ""
@@ -103,7 +95,7 @@ while ($true) {
             Invoke-WebRequest -Uri $url -OutFile $destinationFile
             Write-Host "Download completo!" -ForegroundColor Green
             Start-Sleep -Seconds 1  
-            cls
+            Clear-Host
         }
         elseif ($ChoserPF -eq 2) {
             Write-Host "Baixando Spokwn PrefetchParser..."
@@ -112,88 +104,137 @@ while ($true) {
             Invoke-WebRequest -Uri $urlPB -OutFile $destinationFilePB
             Write-Host "Download completo!" -ForegroundColor Green
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         elseif ($ChoserPF -eq 3) {
-    cls
-    logo
-    Write-Host "Executando Prefetch Scan..."
+            Clear-Host
+            logo
+            Write-Host "Executando Prefetch Scan..."
 
-    $readOnlyFiles = @()
-    $hiddenFiles = @()
-    $dosModeFiles = @()
-    $suspiciousFiles = @()
+            Write-Host "Scanning..."
+            $prefetchFiles = Get-ChildItem -Path C:\Windows\Prefetch -File -Force -Filter *.pf |
+            Sort-Object LastWriteTime -Descending
 
-    Write-Host "Scanning..."
-    $prefetchFiles = Get-ChildItem -Path C:\Windows\Prefetch -File -Force | 
-        Sort-Object LastWriteTime -Descending
+            $readOnlyFiles = @()
+            $hiddenFiles = @()
+            $dosModeFiles = @()
+            $mamInvalidFiles = @()
+            $duplicateFiles = @()
+            $suspiciousFiles = @()
 
-    # Etapa 1
-    $readOnlyFiles = $prefetchFiles | Where-Object { $_.Attributes -match "ReadOnly" }
-    $hiddenFiles = $prefetchFiles | Where-Object { $_.Attributes -match "Hidden" }
+            # Palavras-chave suspeitas
+            $suspiciousKeywords = @("Monaco", "Clicker", "Load", "slinky", "epic", "IceTea", "koid", "exelon", "LithiumLite", "Vape", "zoomin", "dope", "Eternal", "axenta", "medusa", "BReeze", "Raid0", "Raido", "Dream", "Whiteout", "Cleaner")
 
-    # Etapa 2
-    $dosModeFiles = $prefetchFiles | 
-        Where-Object { (Get-Content $_.FullName -ErrorAction SilentlyContinue) -match "This program cannot be run in DOS mode" }
+            # Hashes para duplicados
+            $hashTable = @{}
 
-    # Etapa 3
-    $suspiciousKeywords = @("Monaco", "Clicker", "Load", "slinky", "epic", "IceTea", "koid", "exelon", "LithiumLite", "Vape", "zoomin", "dope", "Eternal", "axenta", "medusa", "BReeze", "Raid0", "Raido", "Dream", "Whiteout", "Cleaner")
-    $suspiciousFiles = $prefetchFiles | 
-        Where-Object {
-            $fileName = $_.Name.ToLower()
-            $suspiciousKeywords | ForEach-Object { 
-                if ($fileName -like "*$_*".ToLower()) { 
-                    return $true 
+            foreach ($file in $prefetchFiles) {
+                try {
+                    # Read-only / Hidden
+                    if ($file.Attributes -match "ReadOnly") { $readOnlyFiles += $file }
+                    if ($file.Attributes -match "Hidden") { $hiddenFiles += $file }
+
+                    # DOS mode detection
+                    $content = Get-Content $file.FullName -ErrorAction SilentlyContinue
+                    if ($content -match "This program cannot be run in DOS mode") { $dosModeFiles += $file }
+
+                    # MAM header
+                    try {
+                        $fs = [System.IO.File]::Open($file.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                        $buffer = New-Object byte[] 3
+                        $fs.Read($buffer, 0, 3) | Out-Null
+                        $fs.Close()
+                        $firstThreeChars = [System.Text.Encoding]::ASCII.GetString($buffer)
+                        if ($firstThreeChars -ne "MAM") { $mamInvalidFiles += $file }
+                    }
+                    catch {
+                        $mamInvalidFiles += $file
+                    }
+
+                    # Hash SHA256
+                    try {
+                        $fs = [System.IO.File]::Open($file.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                        $sha256 = [System.Security.Cryptography.SHA256]::Create()
+                        $hashBytes = $sha256.ComputeHash($fs)
+                        $fs.Close()
+                        $hashString = ($hashBytes | ForEach-Object { $_.ToString("x2") }) -join ""
+                        if ($hashTable.ContainsKey($hashString)) {
+                            $hashTable[$hashString] += , $file
+                        }
+                        else {
+                            $hashTable[$hashString] = @($file)
+                        }
+                    }
+                    catch {
+                    }
+
+                    # Palavras-chave suspeitas
+                    $fileNameLower = $file.Name.ToLower()
+                    foreach ($keyword in $suspiciousKeywords) {
+                        if ($fileNameLower -like "*$($keyword.ToLower())*") { $suspiciousFiles += $file; break }
+                    }
+
+                }
+                catch {
                 }
             }
-        }
 
-    Write-Host ""
-    Write-Host "====================RESULTS===================="
-    Write-Host ""
+            # Duplicados por hash
+            foreach ($hashGroup in $hashTable.GetEnumerator()) {
+                if ($hashGroup.Value.Count -gt 1) {
+                    $duplicateFiles += $hashGroup.Value
+                }
+            }
+            $duplicateFiles = $duplicateFiles | Sort-Object Name -Unique
 
-
-    if ($readOnlyFiles.Count -gt 0 -or $hiddenFiles.Count -gt 0) {
-        Write-Host "Found Read-only or hidden files:" -ForegroundColor Green
-        if ($readOnlyFiles.Count -gt 0) {
             Write-Host ""
-            $readOnlyFiles | ForEach-Object { Write-Host "        ReadOnly File: $($_.Name) | Attributes: $($_.Attributes) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            Write-Host "====================RESULTS===================="
+            Write-Host ""
+
+            if ($readOnlyFiles.Count -gt 0) {
+                Write-Host "Read-only Files:" -ForegroundColor Green
+                $readOnlyFiles | ForEach-Object { Write-Host "        $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            }
+
+            if ($hiddenFiles.Count -gt 0) {
+                Write-Host "Hidden Files:" -ForegroundColor Green
+                $hiddenFiles | ForEach-Object { Write-Host "        $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            }
+
+            if ($dosModeFiles.Count -gt 0) {
+                Write-Host "Modified Extensions (DOS mode):" -ForegroundColor Green
+                $dosModeFiles | ForEach-Object { Write-Host "        $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            }
+
+            if ($mamInvalidFiles.Count -gt 0) {
+                Write-Host "Invalid MAM Header:" -ForegroundColor Green
+                $mamInvalidFiles | ForEach-Object { Write-Host "        $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            }
+
+            if ($duplicateFiles.Count -gt 0) {
+                Write-Host "Duplicate Files (by hash):" -ForegroundColor Green
+                $duplicateFiles | ForEach-Object { Write-Host "        $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            }
+
+            if ($suspiciousFiles.Count -gt 0) {
+                Write-Host "Suspicious Names:" -ForegroundColor Green
+                $suspiciousFiles | ForEach-Object { Write-Host "        $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
+            }
+
+            if (($readOnlyFiles.Count + $hiddenFiles.Count + $dosModeFiles.Count + $mamInvalidFiles.Count + $duplicateFiles.Count + $suspiciousFiles.Count) -eq 0) {
+                Write-Host "Prefetch is clean" -ForegroundColor Green
+            }
+
+            Write-Host ""
+            Write-Host "Pressione Enter para continuar..." -ForegroundColor Cyan
+            Read-Host
+            Clear-Host
         }
-        if ($hiddenFiles.Count -gt 0) {
-            $hiddenFiles | ForEach-Object { Write-Host "        Hidden File: $($_.Name) | Attributes: $($_.Attributes) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
-        }
-    } else {
-        Write-Host "No read-only or hidden files found" -ForegroundColor Red
-    }
-
-    if ($dosModeFiles.Count -gt 0) {
-        Write-Host ""
-        Write-Host "Found Modified extensions in Prefetch:" -ForegroundColor Green
-        Write-Host ""
-        $dosModeFiles | ForEach-Object { Write-Host "        File: $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
-    } else {
-        Write-Host "No modified extensions found in Prefetch" -ForegroundColor Red
-    }
-
-    if ($suspiciousFiles.Count -gt 0) {
-        Write-Host ""
-        Write-Host "Found Suspicious prefetch files:" -ForegroundColor Green
-        Write-Host ""
-        $suspiciousFiles | ForEach-Object { Write-Host "        File: $($_.Name) | LastWriteTime: $($_.LastWriteTime)" -ForegroundColor Yellow }
-    } else {
-        Write-Host "No suspicious prefetch files found" -ForegroundColor Red
-    }
-
-    Write-Host ""
-    Write-Host "Pressione Enter para continuar..." -ForegroundColor Cyan
-    Read-Host
-    cls
-}
 
 
     }
     elseif ($Choser -eq 2) {
-        cls
+        Clear-Host
         Logo 
         Write-Host "Escolha uma Opção para Service-Execution:"
         Write-Host ""
@@ -210,7 +251,7 @@ while ($true) {
             Invoke-WebRequest -Uri $url2 -OutFile $destinationFile2
             Write-Host "Download completo!" -ForegroundColor Green
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         elseif ($Choser2 -eq 2) {
             Write-Host "Baixando Spokwn Service execution..."
@@ -219,17 +260,17 @@ while ($true) {
             Invoke-WebRequest -Uri $url3 -OutFile $destinationFile3
             Write-Host "Download completo!" -ForegroundColor Green
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         elseif ($Choser2 -eq 3) {
             Write-Host "Operação cancelada."
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         else {
             Write-Host "Opção inválida. Tente novamente."
             Start-Sleep -Seconds 1  
-            cls  
+            Clear-Host  
         }
     }
     elseif ($Choser -eq 3) {
@@ -242,80 +283,50 @@ while ($true) {
         Write-Host "Setup Everything..."
         Start-Sleep -Seconds 1
         Start-Process -FilePath $destinationFile4
-        cls
+        Clear-Host
     }
-        elseif ($Choser -eq 4) {
-        cls
+    elseif ($Choser -eq 4) {
+        Clear-Host
         Logo 
         Write-Host "Executando script fsutil"
         Start-Sleep -Seconds 1
         $comandosFsutil = @(
-    'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x80000200 >> DeletedF.txt && notepad DeletedF.txt',
-    'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x00000002 /c:0x00000004 /c:0x80000000 >> Data1.txt',
-    'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x00000002 /c:0x00000004 >> Data2.txt',
-    'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x80000200 >> DeletedExes.txt',
-    'fsutil usn readjournal c: csv | findstr /i /c:.pf | findstr /i /c:0x80000200 >> DeletedPF.txt'
-)
+            'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x80000200 >> DeletedF.txt && notepad DeletedF.txt',
+            'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x00000002 /c:0x00000004 /c:0x80000000 >> Data1.txt',
+            'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x00000002 /c:0x00000004 >> Data2.txt',
+            'fsutil usn readjournal c: csv | findstr /i /c:.exe | findstr /i /c:0x80000200 >> DeletedExes.txt',
+            'fsutil usn readjournal c: csv | findstr /i /c:.pf | findstr /i /c:0x80000200 >> DeletedPF.txt'
+        )
 
-$comandoUnico = $comandosFsutil -join " && "
+        $comandoUnico = $comandosFsutil -join " && "
 
-Write-Host "Executando todos os comandos em um único cmd.exe elevado..." -ForegroundColor Cyan
-Start-Process cmd.exe -ArgumentList "/c $comandoUnico" -Verb RunAs
+        Write-Host "Executando todos os comandos em um único cmd.exe elevado..." -ForegroundColor Cyan
+        Start-Process cmd.exe -ArgumentList "/c $comandoUnico" -Verb RunAs
 
-Write-Host "Todos os comandos foram enviados para execução." -ForegroundColor Yellow
-Pause
+        Write-Host "Todos os comandos foram enviados para execução." -ForegroundColor Yellow
+        Pause
     }
-        elseif ($Choser -eq 5) {
-        Clear-Host
+    elseif ($Choser -eq 5) {
+        $zipUrl = "https://download.ericzimmermanstools.com/net9/bstrings.zip"
+        $zipFile = ".\bstrings.zip"
+        $destinationPath = ".\"
 
-Clear-Host
+        Write-Output "Downloading bstrings.zip from $zipUrl ..."
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
 
-$InitialPath = Get-Location
+        Write-Output "Unzipping $zipFile ..."
+        Expand-Archive -Path $zipFile -DestinationPath $destinationPath -Force
 
-$folderName = "acquisition"
-
-$acquisitionPath = Join-Path -Path $InitialPath -ChildPath $folderName
-
-if (-Not (Test-Path $acquisitionPath)) {
-    New-Item -ItemType Directory -Path $acquisitionPath | Out-Null
-}
-
-$bstringsPath = Join-Path $acquisitionPath "bstrings.exe"
-
-$urlBstrings = "https://files.catbox.moe/zul1g7.bin"
-
-Write-Host "Baixando bstrings.exe..."
-Invoke-WebRequest -Uri $urlBstrings -OutFile $bstringsPath
-Start-Sleep -Seconds 2
-Write-Host "Download concluído!"
-
-$cmd = "bstrings.exe -f `"C:\Windows\system32\config\SYSTEM`" --ls harddiskvolume -o `"$acquisitionPath\paths.txt`" & pause"
-
-Write-Host "Executando bstrings.exe..."
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd `"$acquisitionPath`" && $cmd" -Verb RunAs -Wait
-
-Write-Host "Aguardando 3 segundos para garantir conclusão..."
-Start-Sleep -Seconds 3
-
-$RedLotusCmd = "@powershell -NoProfile -ExecutionPolicy Bypass -Command `"Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/bacanoicua/Screenshare/main/RedLotusHardDiskVolumeConverter.ps1')`""
-
-Write-Host "Executando RedLotusHardDiskVolumeConverter.ps1 via CMD..."
-Start-Process -FilePath "cmd.exe" -ArgumentList "/c cd `"$acquisitionPath`" && $RedLotusCmd" -Verb RunAs -Wait
-
-Set-Location $InitialPath
-
-        Write-Host "Script executado com sucesso!" -ForegroundColor Green
-        Start-Sleep -Seconds 1  
-        cls
+        
     }
     elseif ($Choser -eq 6) {
         Write-Host "Baixando espouken tool"
-        $url7 = "https://github.com/spokwn/Tool/releases/download/v1.1.1/espouken.exe"
+        $url7 = "https://github.com/spokwn/Tool/releases/download/v1.1.2/espouken.exe"
         $destinationFile7 = "$OutfilePath\espouken.exe"
         Invoke-WebRequest -Uri $url7 -OutFile $destinationFile7
         Write-Host "Download completo!" -ForegroundColor Green
         Start-Sleep -Seconds 1  
-        cls
+        Clear-Host
     }
     elseif ($Choser -eq 7) {
         Write-Host "Baixando SystemInformer..."
@@ -327,10 +338,10 @@ Set-Location $InitialPath
         Write-Host "Setup SystemInformer..."
         Start-Sleep -Seconds 1
         Start-Process -FilePath $destinationFile8  
-        cls
+        Clear-Host
     }
     elseif ($Choser -eq 8) {
-        cls
+        Clear-Host
         Logo 
         Write-Host "Escolha uma Opção para BAM"
         Write-Host ""
@@ -347,7 +358,7 @@ Set-Location $InitialPath
             Invoke-Expression (Invoke-RestMethod "https://raw.githubusercontent.com/PureIntent/ScreenShare/main/RedLotusBam.ps1")
             Write-Host "Script executado com sucesso!" -ForegroundColor Green
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         elseif ($Choser3 -eq 2) {
             Write-Host "Baixando Spokwn BAMParser..."
@@ -356,67 +367,67 @@ Set-Location $InitialPath
             Invoke-WebRequest -Uri $url9 -OutFile $destinationFile9
             Write-Host "Download completo!" -ForegroundColor Green
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         elseif ($Choser3 -eq 3) {
             Write-Host "Operação cancelada."
             Start-Sleep -Seconds 1
-            cls
+            Clear-Host
         }
         else {
             Write-Host "Opção inválida. Tente novamente."
             Start-Sleep -Seconds 1  
-            cls  
+            Clear-Host  
         }
     }
-    elseif ($Choser -eq 9){
-        cls
-                Logo 
-                Write-Host "Escolha uma Opção para Signatures"
-                Write-Host ""
-                Write-Host "        [1] RedLotusSignatures"
-                Write-Host "        [2] PathParser - Spokwn"
-                Write-Host "        [3] Cancelar"
-                Write-Host ""
-                $Choser5 = Read-Host "Digite o número da opção"
+    elseif ($Choser -eq 9) {
+        Clear-Host
+        Logo 
+        Write-Host "Escolha uma Opção para Signatures"
+        Write-Host ""
+        Write-Host "        [1] RedLotusSignatures"
+        Write-Host "        [2] PathParser - Spokwn"
+        Write-Host "        [3] Cancelar"
+        Write-Host ""
+        $Choser5 = Read-Host "Digite o número da opção"
 
-                if ($Choser5 -eq 1) {
-                    Write-Host "Executando RedLotusSignatures tool"
-                    Start-Sleep -Seconds 1
-                    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-                    Invoke-Expression (Invoke-RestMethod https://raw.githubusercontent.com/bacanoicua/Screenshare/main/RedLotusSignatures.ps1)
-                    Write-Host "Script executado com sucesso!" -ForegroundColor Green
-                    Start-Sleep -Seconds 1
-                    cls
-                }
-                elseif ($Choser5 -eq 2) {
-                    Write-Host "Baixando Spokwn PathParser..."
-                    $url10 = "https://github.com/spokwn/PathsParser/releases/download/v1.2/PathsParser.exe"
-                    $destinationFile10 = "$OutfilePath\PathsParser.exe"
-                    Invoke-WebRequest -Uri $url10 -OutFile $destinationFile10
-                    Write-Host "Download completo!" -ForegroundColor Green
-                    Start-Sleep -Seconds 1
-                    cls
-                }
-                elseif ($Choser5 -eq 3) {
-                    Write-Host "Operação cancelada."
-                    Start-Sleep -Seconds 1
-                    cls
-                }
-                else {
-                    Write-Host "Opção inválida. Tente novamente."
-                    Start-Sleep -Seconds 1  
-                    cls  F
-                }
+        if ($Choser5 -eq 1) {
+            Write-Host "Executando RedLotusSignatures tool"
+            Start-Sleep -Seconds 1
+            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+            Invoke-Expression (Invoke-RestMethod https://raw.githubusercontent.com/bacanoicua/Screenshare/main/RedLotusSignatures.ps1)
+            Write-Host "Script executado com sucesso!" -ForegroundColor Green
+            Start-Sleep -Seconds 1
+            Clear-Host
+        }
+        elseif ($Choser5 -eq 2) {
+            Write-Host "Baixando Spokwn PathParser..."
+            $url10 = "https://github.com/spokwn/PathsParser/releases/download/v1.2/PathsParser.exe"
+            $destinationFile10 = "$OutfilePath\PathsParser.exe"
+            Invoke-WebRequest -Uri $url10 -OutFile $destinationFile10
+            Write-Host "Download completo!" -ForegroundColor Green
+            Start-Sleep -Seconds 1
+            Clear-Host
+        }
+        elseif ($Choser5 -eq 3) {
+            Write-Host "Operação cancelada."
+            Start-Sleep -Seconds 1
+            Clear-Host
+        }
+        else {
+            Write-Host "Opção inválida. Tente novamente."
+            Start-Sleep -Seconds 1  
+            Clear-Host  F
+        }
     }
-    elseif ($Choser -eq 0){
-    Write-Host "Baixando MACETA Tool"  
-                $url11 = "https://github.com/RRancio/Exec/raw/main/Files/newmaceta.exe"
-                $destinationFile11 = "$OutfilePath\NewMaceta.exe"
-                Invoke-WebRequest -Uri $url11 -OutFile $destinationFile11
-                Write-Host "Download completo!" -ForegroundColor Green
-                Start-Sleep -Seconds 1
-                cls
+    elseif ($Choser -eq 0) {
+        Write-Host "Baixando MACETA Tool"  
+        $url11 = "https://github.com/RRancio/Exec/raw/main/Files/newmaceta.exe"
+        $destinationFile11 = "$OutfilePath\NewMaceta.exe"
+        Invoke-WebRequest -Uri $url11 -OutFile $destinationFile11
+        Write-Host "Download completo!" -ForegroundColor Green
+        Start-Sleep -Seconds 1
+        Clear-Host
     }
 
 
@@ -426,36 +437,37 @@ Set-Location $InitialPath
 
     #menu2
     elseif ($Choser -match "^next$") {
-    cls
-    do {
-        Menu2
-        $Choser4 = Read-Host "Escolha uma opção"
+        Clear-Host
+        do {
+            Menu2
+            $Choser4 = Read-Host "Escolha uma opção"
 
-        if ($Choser4 -eq 1) {
+            if ($Choser4 -eq 1) {
                 $url12 = "https://www.nirsoft.net/utils/usbdeview.zip"
                 $destinationFile12 = "$OutfilePath\USBDeview.zip"
                 Invoke-WebRequest -Uri $url12 -OutFile $destinationFile12
                 Write-Host "Download completo!" -ForegroundColor Green
                 Start-Sleep -Seconds 1
-                cls
+                Clear-Host
             }
             elseif ($Choser4 -eq 2) {
-            Write-Host "Executando AltDetector"
-    Start-Sleep -Seconds 1
+                Write-Host "Executando AltDetector"
+                Start-Sleep -Seconds 1
 
-    try {
-        Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-        Invoke-Expression (Invoke-RestMethod -Uri "https://raw.githubusercontent.com/Smoothzada/Minecraft-Alt-Detector/refs/heads/main/AltDetector.ps1")
-        Write-Host "Script executado com sucesso!" -ForegroundColor Green
-    } catch {
-        Write-Host "Erro ao executar o script: $_" -ForegroundColor Red
-    }
+                try {
+                    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+                    Invoke-Expression (Invoke-RestMethod -Uri "https://files.catbox.moe/wrdpqk.ps1")
+                    Write-Host "Script executado com sucesso!" -ForegroundColor Green
+                }
+                catch {
+                    Write-Host "Erro ao executar o script: $_" -ForegroundColor Red
+                }
 
-    Start-Sleep -Seconds 1
-    cls
+                Start-Sleep -Seconds 1
+                Clear-Host
             }
             elseif ($Choser4 -eq 3) {
-                cls
+                Clear-Host
                 Logo 
                 Write-Host "Escolha uma Opção para Scheduler"
                 Write-Host ""
@@ -476,18 +488,18 @@ Set-Location $InitialPath
                     } | Out-Gridview
                     Write-Host "Script executado com sucesso!" -ForegroundColor Green
                     Start-Sleep -Seconds 1
-                    cls
-                    }
-                    elseif ($Choser6 -eq 2) {
+                    Clear-Host
+                }
+                elseif ($Choser6 -eq 2) {
                     Write-Host "Executando Script"
                     Start-Sleep -Seconds 1
                     powershell -Command "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/ObsessiveBf/Task-Scheduler-Parser/main/script.ps1')"
                     Start-Sleep -Seconds 2
                     Write-Host "Script executado com sucesso!" -ForegroundColor Green
                     Start-Sleep -Seconds 1
-                    cls
-                    }
-                    elseif ($Choser6 -eq 3) {
+                    Clear-Host
+                }
+                elseif ($Choser6 -eq 3) {
                     Write-Host "Executando Script"
                     Start-Sleep -Seconds 1
                     $UserRN = $env:USERNAME
@@ -497,327 +509,331 @@ Set-Location $InitialPath
                     Get-ScheduledTask | Where-Object { $_.Author -match $UserRN } | Out-GridView
                     Write-Host "Script executado com sucesso!" -ForegroundColor Green
                     Start-Sleep -Seconds 1
-                    cls
-                    }
-                    elseif ($Choser6 -eq 4) {
+                    Clear-Host
+                }
+                elseif ($Choser6 -eq 4) {
                     Write-Host "Executando Script"
                     Start-Sleep -Seconds 1
-                        Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/nolww/project-mohr/refs/heads/main/SuspiciousScheduler.ps1')
+                    Invoke-Expression (Invoke-RestMethod 'https://raw.githubusercontent.com/nolww/project-mohr/refs/heads/main/SuspiciousScheduler.ps1')
                     Start-Sleep -Seconds 2
                     Write-Host "Script executado com sucesso!" -ForegroundColor Green
                     Start-Sleep -Seconds 1
-                    cls
-                    }
-                    elseif ($Choser6 -eq 5) {
+                    Clear-Host
+                }
+                elseif ($Choser6 -eq 5) {
                     Write-Host "Executando Script"
                     Start-Sleep -Seconds 1
-                        Add-Type -AssemblyName System.Windows.Forms
+                    Add-Type -AssemblyName System.Windows.Forms
 
-$servicos = Get-WmiObject Win32_Service | Select-Object `
-    DisplayName, Name, StartMode, State, StartName, PathName
+                    $servicos = Get-WmiObject Win32_Service | Select-Object `
+                        DisplayName, Name, StartMode, State, StartName, PathName
 
-$servicosWindowsComuns = @(
-    "C:\Windows\System32\svchost.exe",
-    "C:\Windows\System32\lsass.exe",
-    "C:\Windows\System32\wininit.exe",
-    "C:\Windows\System32\winlogon.exe",
-    "C:\Windows\System32\services.exe",
-    "C:\WINDOWS\system32\wbem\WmiApSrv.exe",
-    "C:\WINDOWS\system32\locator.exe",
-    "C:\WINDOWS\System32\DriverStore\FileRepository\u0376118.inf_amd64_d3964dd16c191eeb\B371320\atiesrxx.exe",
-    "C:\WINDOWS\system32\dllhost.exe",
-    "C:\WINDOWS\system32\msdtc.exe",
-    "C:\WINDOWS\system32\vssvc.exe",
-    "C:\WINDOWS\system32\CredentialEnrollmentManager.exe",
-    "C:\WINDOWS\system32\vds.exe",
-    "C:\WINDOWS\system32\fxssvc.exe",
-    "C:\WINDOWS\system32\GameInputSvc.exe",
-    "C:\WINDOWS\system32\TieringEngineService.exe",
-    "C:\WINDOWS\SysWow64\perfhost.exe",
-    "C:\WINDOWS\servicing\TrustedInstaller.exe",
-    "C:\WINDOWS\system32\snmptrap.exe",
-    "C:\WINDOWS\system32\AppVClient.exe",
-    "C:\WINDOWS\System32\DriverStore\FileRepository\nv_disp.inf_amd64_1e8724cced6e93d4\Display.NvContainer\...",
-    "C:\WINDOWS\System32\OpenSSH\ssh-agent.exe",
-    "C:\WINDOWS\system32\sppsvc.exe",
-    "C:\WINDOWS\system32\DiagSvcs\DiagnosticsHub.StandardCollector.Service.exe",
-    "C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\SMsvcHost.exe",
-    "C:\WINDOWS\system32\SensorDataService.exe",
-    "C:\WINDOWS\system32\wbengine.exe",
-    "C:\WINDOWS\system32\spectrum.exe",
-    "C:\WINDOWS\system32\SecurityHealthService.exe",
-    "C:\WINDOWS\system32\PerceptionSimulation\PerceptionSimulationService.exe",
-    "C:\WINDOWS\system32\AgentService.exe",
-    "C:\WINDOWS\system32\alg.exe",
-    "C:\WINDOWS\system32\spoolsv.exe",
-    "C:\WINDOWS\system32\SgrmBroker.exe",
-    "C:\WINDOWS\system32\msiexec.exe",
-    "C:\WINDOWS\system32\SearchIndexer.exe"
-)
+                    $servicosWindowsComuns = @(
+                        "C:\Windows\System32\svchost.exe",
+                        "C:\Windows\System32\lsass.exe",
+                        "C:\Windows\System32\wininit.exe",
+                        "C:\Windows\System32\winlogon.exe",
+                        "C:\Windows\System32\services.exe",
+                        "C:\WINDOWS\system32\wbem\WmiApSrv.exe",
+                        "C:\WINDOWS\system32\locator.exe",
+                        "C:\WINDOWS\System32\DriverStore\FileRepository\u0376118.inf_amd64_d3964dd16c191eeb\B371320\atiesrxx.exe",
+                        "C:\WINDOWS\system32\dllhost.exe",
+                        "C:\WINDOWS\system32\msdtc.exe",
+                        "C:\WINDOWS\system32\vssvc.exe",
+                        "C:\WINDOWS\system32\CredentialEnrollmentManager.exe",
+                        "C:\WINDOWS\system32\vds.exe",
+                        "C:\WINDOWS\system32\fxssvc.exe",
+                        "C:\WINDOWS\system32\GameInputSvc.exe",
+                        "C:\WINDOWS\system32\TieringEngineService.exe",
+                        "C:\WINDOWS\SysWow64\perfhost.exe",
+                        "C:\WINDOWS\servicing\TrustedInstaller.exe",
+                        "C:\WINDOWS\system32\snmptrap.exe",
+                        "C:\WINDOWS\system32\AppVClient.exe",
+                        "C:\WINDOWS\System32\DriverStore\FileRepository\nv_disp.inf_amd64_1e8724cced6e93d4\Display.NvContainer\...",
+                        "C:\WINDOWS\System32\OpenSSH\ssh-agent.exe",
+                        "C:\WINDOWS\system32\sppsvc.exe",
+                        "C:\WINDOWS\system32\DiagSvcs\DiagnosticsHub.StandardCollector.Service.exe",
+                        "C:\WINDOWS\Microsoft.NET\Framework64\v4.0.30319\SMsvcHost.exe",
+                        "C:\WINDOWS\system32\SensorDataService.exe",
+                        "C:\WINDOWS\system32\wbengine.exe",
+                        "C:\WINDOWS\system32\spectrum.exe",
+                        "C:\WINDOWS\system32\SecurityHealthService.exe",
+                        "C:\WINDOWS\system32\PerceptionSimulation\PerceptionSimulationService.exe",
+                        "C:\WINDOWS\system32\AgentService.exe",
+                        "C:\WINDOWS\system32\alg.exe",
+                        "C:\WINDOWS\system32\spoolsv.exe",
+                        "C:\WINDOWS\system32\SgrmBroker.exe",
+                        "C:\WINDOWS\system32\msiexec.exe",
+                        "C:\WINDOWS\system32\SearchIndexer.exe"
+                    )
 
-function Determina-OrigemServico {
-    param ($Caminho)
+                    function DeterminaOrigemServico {
+                        param ($Caminho)
 
-    if (-not $Caminho -or $Caminho -eq "") { return "Unknown" }
+                        if (-not $Caminho -or $Caminho -eq "") { return "Unknown" }
 
-    $caminhoLower = $Caminho.ToLower()
+                        $caminhoLower = $Caminho.ToLower()
 
-    if ($caminhoLower -match "c:\\windows\\system32\\svchost.exe" -or 
-        $servicosWindowsComuns -contains $Caminho) {
-        return "Windows"
-    } elseif ($caminhoLower -match "c:\\program files" -or 
-              $caminhoLower -match "c:\\program files \\(x86\)") {
-        return "Third"
-    } else {
-        return "Unknown"
-    }
-}
+                        if ($caminhoLower -match "c:\\windows\\system32\\svchost.exe" -or 
+                            $servicosWindowsComuns -contains $Caminho) {
+                            return "Windows"
+                        }
+                        elseif ($caminhoLower -match "c:\\program files" -or 
+                            $caminhoLower -match "c:\\program files \\(x86\)") {
+                            return "Third"
+                        }
+                        else {
+                            return "Unknown"
+                        }
+                    }
 
-Write-Host "Processando serviÃ§os do sistema..."
+                    Write-Host "Processando serviÃ§os do sistema..."
 
-$servicosFormatados = @()
+                    $servicosFormatados = @()
 
-foreach ($servico in $servicos) {
-    $origem = Determina-OrigemServico -Caminho $servico.PathName
+                    foreach ($servico in $servicos) {
+                        $origem = DeterminaOrigemServico -Caminho $servico.PathName
 
-    $servico | Add-Member -MemberType NoteProperty -Name "Origem" -Value $origem -PassThru
-    $servicosFormatados += $servico
-}
+                        $servico | Add-Member -MemberType NoteProperty -Name "Origem" -Value $origem -PassThru
+                        $servicosFormatados += $servico
+                    }
 
-if ($servicosFormatados.Count -eq 0) {
-    Write-Host "Nenhum serviÃ§o encontrado." -ForegroundColor Yellow
-    pause
-    exit
-}
-cls
-Write-Host "Exibindo lista de serviÃ§os..."
+                    if ($servicosFormatados.Count -eq 0) {
+                        Write-Host "Nenhum serviÃ§o encontrado." -ForegroundColor Yellow
+                        pause
+                        exit
+                    }
+                    Clear-Host
+                    Write-Host "Exibindo lista de serviÃ§os..."
 
-$servicosFormatados | Select-Object DisplayName, Name, State, StartMode, Origem, StartName, PathName | `
-    Out-GridView -Title "SvcParser"
+                    $servicosFormatados | Select-Object DisplayName, Name, State, StartMode, Origem, StartName, PathName | `
+                        Out-GridView -Title "SvcParser"
 
-Write-Host "NOLW$" -ForegroundColor Green
+                    Write-Host "NOLW$" -ForegroundColor Green
                     Start-Sleep -Seconds 2
                     Write-Host "Script executado com sucesso!" -ForegroundColor Green
                     Start-Sleep -Seconds 1
-                    cls
-                    }
-                    elseif ($Choser6 -eq 6) {
+                    Clear-Host
+                }
+                elseif ($Choser6 -eq 6) {
                     Write-Host "Operação cancelada."
                     Start-Sleep -Seconds 1
-                    cls
-                    }
-                    else {
+                    Clear-Host
+                }
+                else {
                     Write-Host "Opção inválida. Tente novamente."
                     Start-Sleep -Seconds 1  
-                    cls  
+                    Clear-Host  
                 }
             }
             elseif ($Choser4 -eq 4) {
-            cls
-            Logo 
-            Write-Host "Escolha uma Opção para Journal:"
-            Write-Host ""
-            Write-Host "        [1] JournalTrace"
-            Write-Host "        [2] Echo JournalTool"
-            Write-Host "        [3] Cancelar"
-            Write-Host ""
-        $ChoserJN = Read-Host "Digite o número da opção"
+                Clear-Host
+                Logo 
+                Write-Host "Escolha uma Opção para Journal:"
+                Write-Host ""
+                Write-Host "        [1] JournalTrace"
+                Write-Host "        [2] Echo JournalTool"
+                Write-Host "        [3] Cancelar"
+                Write-Host ""
+                $ChoserJN = Read-Host "Digite o número da opção"
 
-        if ($ChoserJN -eq 1) {
-            Write-Host "Baixando JournalTrace"
-            $urlJN = "https://github.com/spokwn/JournalTrace/releases/download/1.2/JournalTrace.exe"
-            $destinationFileJN = "$OutfilePath\JournalTrace.exe"
-            Invoke-WebRequest -Uri $urlJN -OutFile $destinationFileJN
-            Write-Host "Download completo!" -ForegroundColor Green
-            Start-Sleep -Seconds 1
-            cls
-        }
-        elseif ($ChoserJN -eq 2) {
-            Write-Host "Baixando Echo JournalTool"
-            $urlJN = "https://files.catbox.moe/u1txpf.bin"
-            $destinationFileJN = "$OutfilePath\Journal-Tool.exe"
-            Invoke-WebRequest -Uri $urlJN -OutFile $destinationFileJN
-            Write-Host "Download completo!" -ForegroundColor Green
-            Start-Sleep -Seconds 1
-            cls
-        }
-        elseif ($ChoserJN -eq 3) {
-            Write-Host "Operação cancelada."
-            Start-Sleep -Seconds 1
-            cls
-        }
-        else {
-            Write-Host "Opção inválida. Tente novamente."
-            Start-Sleep -Seconds 1  
-            cls  
-        }
-            }
-            elseif ($Choser4 -eq 5) {
-            Write-Host "Baixando InjGen"  
-                    $url17 = "https://github.com/NotRequiem/InjGen/releases/download/v2.0/InjGen.exe"
-                    $destinationFile17 = "$OutfilePath\InjGen.exe"
-                    Invoke-WebRequest -Uri $url17 -OutFile $destinationFile17
+                if ($ChoserJN -eq 1) {
+                    Write-Host "Baixando JournalTrace"
+                    $urlJN = "https://github.com/spokwn/JournalTrace/releases/download/1.2/JournalTraceNormal.exe"
+                    $destinationFileJN = "$OutfilePath\JournalTrace.exe"
+                    Invoke-WebRequest -Uri $urlJN -OutFile $destinationFileJN
                     Write-Host "Download completo!" -ForegroundColor Green
                     Start-Sleep -Seconds 1
-                    cls
+                    Clear-Host
+                }
+                elseif ($ChoserJN -eq 2) {
+                    Write-Host "Baixando Echo JournalTool"
+                    $urlJN = "https://files.catbox.moe/u1txpf.bin"
+                    $destinationFileJN = "$OutfilePath\Journal-Tool.exe"
+                    Invoke-WebRequest -Uri $urlJN -OutFile $destinationFileJN
+                    Write-Host "Download completo!" -ForegroundColor Green
+                    Start-Sleep -Seconds 1
+                    Clear-Host
+                }
+                elseif ($ChoserJN -eq 3) {
+                    Write-Host "Operação cancelada."
+                    Start-Sleep -Seconds 1
+                    Clear-Host
+                }
+                else {
+                    Write-Host "Opção inválida. Tente novamente."
+                    Start-Sleep -Seconds 1  
+                    Clear-Host  
+                }
+            }
+            elseif ($Choser4 -eq 5) {
+                Write-Host "Baixando InjGen"  
+                $url17 = "https://github.com/NotRequiem/InjGen/releases/download/v2.0/InjGen.exe"
+                $destinationFile17 = "$OutfilePath\InjGen.exe"
+                Invoke-WebRequest -Uri $url17 -OutFile $destinationFile17
+                Write-Host "Download completo!" -ForegroundColor Green
+                Start-Sleep -Seconds 1
+                Clear-Host
             }
             elseif ($Choser4 -eq 6) {
                 Write-Host "Baixando EDDv310"  
-                    $url18 = "https://files.catbox.moe/jqoeck.bin"
-                    $destinationFile18 = "$OutfilePath\EDDv310.exe"
-                    Invoke-WebRequest -Uri $url18 -OutFile $destinationFile18
-                    Write-Host "Download completo!" -ForegroundColor Green
-                    Start-Sleep -Seconds 1
-                    Write-Host "Exec Disk Scan?"
-                    Write-Host ""
-                    Write-Host "        [1] Yes, Start scan;"
-                    Write-Host "        [2] No, back to menu;"
-                    Write-Host ""
-                    $Choser7 = Read-Host "Digite o número da opção"
-                    if ($Choser7 -eq 1) {
+                $url18 = "https://files.catbox.moe/jqoeck.bin"
+                $destinationFile18 = "$OutfilePath\EDDv310.exe"
+                Invoke-WebRequest -Uri $url18 -OutFile $destinationFile18
+                Write-Host "Download completo!" -ForegroundColor Green
+                Start-Sleep -Seconds 1
+                Write-Host "Exec Disk Scan?"
+                Write-Host ""
+                Write-Host "        [1] Yes, Start scan;"
+                Write-Host "        [2] No, back to menu;"
+                Write-Host ""
+                $Choser7 = Read-Host "Digite o número da opção"
+                if ($Choser7 -eq 1) {
                     Start-Process cmd.exe -ArgumentList "/c `"$destinationFile18 /batch && echo ㅤ  && echo Disk Scan Complete && echo ㅤ && pause`"" -Verb RunAs
-                    }
-                    cls
+                }
+                Clear-Host
             }
             elseif ($Choser4 -eq 7) {
-            Write-Host "Baixando AppCompatCacheParser"
-            $url15 = "https://download.ericzimmermanstools.com/AppCompatCacheParser.zip"
+                Write-Host "Baixando AppCompatCacheParser"
+                $url15 = "https://download.ericzimmermanstools.com/AppCompatCacheParser.zip"
     
-            if ([string]::IsNullOrEmpty($OutfilePath)) {
-                $OutfilePath = "$env:USERPROFILE\Downloads"
-                Write-Host "O caminho de saída não foi definido. Usando o caminho padrão: $OutfilePath" -ForegroundColor Yellow
-            }
+                if ([string]::IsNullOrEmpty($OutfilePath)) {
+                    $OutfilePath = "$env:USERPROFILE\Downloads"
+                    Write-Host "O caminho de saída não foi definido. Usando o caminho padrão: $OutfilePath" -ForegroundColor Yellow
+                }
     
-            $destinationFile15 = "$OutfilePath\AppCompatCacheParser.zip"
-            $extractPath = "$OutfilePath\AppCompatCacheParser"
+                $destinationFile15 = "$OutfilePath\AppCompatCacheParser.zip"
+                $extractPath = "$OutfilePath\AppCompatCacheParser"
     
-            Invoke-WebRequest -Uri $url15 -OutFile $destinationFile15
-            Write-Host "Download completo!" -ForegroundColor Green
-            Start-Sleep -Seconds 1
-            Write-Host ""
-            Write-Host "Exec AppCompatCacheParser?"
-            Write-Host ""
-            Write-Host "        [1] Yes, Start AppCompatCacheParser;"
-            Write-Host "        [2] No, back to menu;"
-            Write-Host ""
-            $userInput = Read-Host "Digite sua escolha"
+                Invoke-WebRequest -Uri $url15 -OutFile $destinationFile15
+                Write-Host "Download completo!" -ForegroundColor Green
+                Start-Sleep -Seconds 1
+                Write-Host ""
+                Write-Host "Exec AppCompatCacheParser?"
+                Write-Host ""
+                Write-Host "        [1] Yes, Start AppCompatCacheParser;"
+                Write-Host "        [2] No, back to menu;"
+                Write-Host ""
+                $userInput = Read-Host "Digite sua escolha"
 
-            if ($userInput -eq '1') {
-                if (!(Test-Path $extractPath)) {
-                    New-Item -ItemType Directory -Path $extractPath | Out-Null
+                if ($userInput -eq '1') {
+                    if (!(Test-Path $extractPath)) {
+                        New-Item -ItemType Directory -Path $extractPath | Out-Null
+                    }
+                    try {
+                        Expand-Archive -Path $destinationFile15 -DestinationPath $extractPath -Force
+                        Write-Host "Extração completa!" -ForegroundColor Green
+                        Start-Sleep -Seconds 1
+                        Write-Host ""
+                        Start-Process cmd.exe -ArgumentList "/c cd `"AppCompatCacheParser`" && Appcompatcacheparser.exe --csv . & pause" -Verb RunAs
+                    }
+                    catch {
+                        Write-Host "Erro: $_" -ForegroundColor Red
+                    }
                 }
-                try {
-                    Expand-Archive -Path $destinationFile15 -DestinationPath $extractPath -Force
-                    Write-Host "Extração completa!" -ForegroundColor Green
-                    Start-Sleep -Seconds 1
-                    Write-Host ""
-                    Start-Process cmd.exe -ArgumentList "/c cd `"AppCompatCacheParser`" && Appcompatcacheparser.exe --csv . & pause" -Verb RunAs
-                } catch {
-                    Write-Host "Erro: $_" -ForegroundColor Red
+                else {
+                    Write-Host "Extração cancelada." -ForegroundColor Yellow
                 }
-            } else {
-                Write-Host "Extração cancelada." -ForegroundColor Yellow
-            }
     
-            Start-Sleep -Seconds 1
-            cls
-        }
+                Start-Sleep -Seconds 1
+                Clear-Host
+            }
             elseif ($Choser4 -eq 8) {
                 Write-Host "Baixando Velociraptor"  
-                    $url16 = "https://github.com/Velocidex/velociraptor/releases/download/v0.73/velociraptor-v0.73.3-windows-amd64.exe"
-                    $destinationFile16 = "$OutfilePath\Velociraptor.exe"
-                    Invoke-WebRequest -Uri $url16 -OutFile $destinationFile16
-                    Write-Host "Download completo!" -ForegroundColor Green
-                    Start-Sleep -Seconds 1
-                    Write-Host "Exec Velociraptor GUI?"
-                    Write-Host ""
-                    Write-Host "        [1] Yes, Start Velociraptor GUI;"
-                    Write-Host "        [2] No, back to menu;"
-                    Write-Host ""
-                    $Choser8 = Read-Host "Digite o número da opção"
-                    if ($Choser8 -eq 1) {
+                $url16 = "https://github.com/Velocidex/velociraptor/releases/download/v0.73/velociraptor-v0.73.3-windows-amd64.exe"
+                $destinationFile16 = "$OutfilePath\Velociraptor.exe"
+                Invoke-WebRequest -Uri $url16 -OutFile $destinationFile16
+                Write-Host "Download completo!" -ForegroundColor Green
+                Start-Sleep -Seconds 1
+                Write-Host "Exec Velociraptor GUI?"
+                Write-Host ""
+                Write-Host "        [1] Yes, Start Velociraptor GUI;"
+                Write-Host "        [2] No, back to menu;"
+                Write-Host ""
+                $Choser8 = Read-Host "Digite o número da opção"
+                if ($Choser8 -eq 1) {
                     Start-Process cmd.exe -ArgumentList "/c `"$destinationFile16 gui`"" -Verb RunAs
-                    }
-                    cls
+                }
+                Clear-Host
             }
-              elseif ($Choser4 -eq 9) {
+            elseif ($Choser4 -eq 9) {
                 Write-Host "Baixando Unicode"  
-                    $url19 = "https://github.com/RRancio/unicode/releases/download/rel/Unicode.exe"
-                    $destinationFile19 = "$OutfilePath\Unicode.exe"
-                    Invoke-WebRequest -Uri $url19 -OutFile $destinationFile19
-                    Write-Host "Download completo!" -ForegroundColor Green
-                    Start-Sleep -Seconds 1
-                    cls
+                $url19 = "https://github.com/RRancio/unicode/releases/download/rel/Unicode.exe"
+                $destinationFile19 = "$OutfilePath\Unicode.exe"
+                Invoke-WebRequest -Uri $url19 -OutFile $destinationFile19
+                Write-Host "Download completo!" -ForegroundColor Green
+                Start-Sleep -Seconds 1
+                Clear-Host
             }
-            elseif ($Choser4 -eq 0){
-            cls
-            Logo
+            elseif ($Choser4 -eq 0) {
+                Clear-Host
+                Logo
                 Write-Host "Executando Service Check" -ForegroundColor Cyan
 
-    Write-Host ""
-    Write-Host "=============SERVICES============="
-    Write-Host ""
-    $services = @("Appinfo", "Cdpusersvc", "Diagtrack", "Dusmsvc", "DPS", "Eventlog", "Pcasvc", "Sgrmbroker", "Sysmain", "BAM", "WSearch", "VSS")
+                Write-Host ""
+                Write-Host "=============SERVICES============="
+                Write-Host ""
+                $services = @("Appinfo", "Cdpusersvc", "Diagtrack", "Dusmsvc", "DPS", "Eventlog", "Pcasvc", "Sgrmbroker", "Sysmain", "BAM", "WSearch", "VSS")
 
-    foreach ($serviceName in $services) {
-        $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
-        if ($null -ne $service) {
-            if ($service.Status -eq 'Running') {
-                Write-Host "Running" -ForegroundColor Green -NoNewline
-            } else {
-                Write-Host "Disable" -ForegroundColor Red -NoNewline
+                foreach ($serviceName in $services) {
+                    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+                    if ($null -ne $service) {
+                        if ($service.Status -eq 'Running') {
+                            Write-Host "Running" -ForegroundColor Green -NoNewline
+                        }
+                        else {
+                            Write-Host "Disable" -ForegroundColor Red -NoNewline
+                        }
+                        Write-Host " $serviceName" -ForegroundColor Yellow
+                    }
+                    else {
+                        Write-Host "Serviço não encontrado: <$serviceName>" -ForegroundColor DarkGray
+                    }
+                }
+                Write-Host ""
+                Write-Host "Service Check completo!" -ForegroundColor Green
+                Start-Sleep -Seconds 1
+                Write-Host ""
+                Write-Host "Pressione Enter para continuar..." -ForegroundColor Cyan
+                Read-Host
+                Clear-Host
             }
-            Write-Host " $serviceName" -ForegroundColor Yellow
-        } else {
-            Write-Host "Serviço não encontrado: <$serviceName>" -ForegroundColor DarkGray
-        }
-    }
-    Write-Host ""
-    Write-Host "Service Check completo!" -ForegroundColor Green
-    Start-Sleep -Seconds 1
-    Write-Host ""
-    Write-Host "Pressione Enter para continuar..." -ForegroundColor Cyan
-    Read-Host
-    cls
-}
             elseif ($Choser4 -match "^exit$") {
-            Write-Host "Saindo..." -ForegroundColor Yellow
-            Start-Sleep -Seconds 1
-            cd C:\Windows\System32
-            cls
-            cmd
-            exit  
+                Write-Host "Saindo..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 1
+                Set-Location C:\Windows\System32
+                Clear-Host
+                cmd
+                exit  
             }
             elseif ($Choser4 -match "^back$") {
-            Write-Host "Voltando ao Menu Principal..." -ForegroundColor Yellow
-            break  
-            cls
+                Write-Host "Voltando ao Menu Principal..." -ForegroundColor Yellow
+                break  
+                Clear-Host
+            }
+            else {
+                Write-Host "Opção inválida. Tente novamente." -ForegroundColor Red
+                Start-Sleep -Seconds 1
+                Clear-Host
+            }
+        } while ($true) 
+        if ($Choser -match "^next$") {
+            Clear-Host  
         }
-        else {
-            Write-Host "Opção inválida. Tente novamente." -ForegroundColor Red
-            Start-Sleep -Seconds 1
-            cls
-        }
-    } while ($true) 
-    if ($Choser -match "^next$") {
-        cls  
     }
-}
     elseif ($Choser -match "^exit$") {
-        cls
+        Clear-Host
         Logo
         Write-Host "Saindo..." -ForegroundColor Yellow
         Start-Sleep -Seconds 1 
-        cls
-        cd C:\Windows\System32
-        cmd
+        Clear-Host
         break
-        cls
+        Clear-Host
     }
     else {
         Write-Host "Opção inválida. Tente novamente."
         Start-Sleep -Seconds 1  
-        cls
+        Clear-Host
     }
     MainMenu
 }
